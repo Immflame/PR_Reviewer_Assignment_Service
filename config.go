@@ -19,9 +19,9 @@ func LoadConfig() Config {
 		log.Println(".env file not found")
 	}
 
-	port := os.Getenv("AUTH_SERVICE_PORT")
-	secretKey := os.Getenv("AUTH_SERVICE_SECRET_KEY")
-	databaseURL := os.Getenv("AUTH_SERVICE_DATABASE_URL")
+	port := os.Getenv("SERVICE_PORT")
+	secretKey := os.Getenv("SERVICE_SECRET_KEY")
+	databaseURL := os.Getenv("SERVICE_DATABASE_URL")
 
 	return Config{
 		Port:        port,
