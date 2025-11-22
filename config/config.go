@@ -1,4 +1,4 @@
-package main
+package config
 
 import (
 	"log"
@@ -19,9 +19,9 @@ func LoadConfig() Config {
 		log.Println(".env file not found")
 	}
 
-	port := os.Getenv("SERVICE_PORT")
-	secretKey := os.Getenv("SERVICE_SECRET_KEY")
-	databaseURL := os.Getenv("SERVICE_DATABASE_URL")
+	port := os.Getenv("PORT")
+	secretKey := os.Getenv("SECRET_KEY")
+	databaseURL := os.Getenv("DATABASE_URL")
 
 	return Config{
 		Port:        port,
