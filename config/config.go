@@ -9,7 +9,6 @@ import (
 
 type Config struct {
 	Port        string
-	SecretKey   string
 	DatabaseURL string
 }
 
@@ -20,12 +19,10 @@ func LoadConfig() Config {
 	}
 
 	port := os.Getenv("PORT")
-	secretKey := os.Getenv("SECRET_KEY")
 	databaseURL := os.Getenv("DATABASE_URL")
 
 	return Config{
 		Port:        port,
-		SecretKey:   secretKey,
 		DatabaseURL: databaseURL,
 	}
 }
