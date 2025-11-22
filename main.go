@@ -60,6 +60,7 @@ func main() {
 	router.HandleFunc("/pullRequest/create", Handler.PRCreateHandler).Methods("POST")
 	router.HandleFunc("/pullRequest/merge", Handler.PRMergeHandler).Methods("POST")
 	router.HandleFunc("/pullRequest/reassign", Handler.PRReassignHandler).Methods("POST")
+	router.HandleFunc("/stats/overall", Handler.GetOverallStatsHandler).Methods("GET") //эндпоинт для ствтистики
 
 	serverAddress := ":" + conf.Port
 	fmt.Printf("Service listening on %s\n", serverAddress)

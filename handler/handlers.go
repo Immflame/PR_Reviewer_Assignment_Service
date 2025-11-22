@@ -22,6 +22,7 @@ func NewHandler(conf config.Config, db *sql.DB) *Handler {
 	return &Handler{Conf: conf, DB: db}
 }
 
+// отправить сообщение об ошибке
 func sendErrorResponse(w http.ResponseWriter, httpStatus int, errorCode models.ErrorCode, message string) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(httpStatus)
@@ -36,6 +37,7 @@ func sendErrorResponse(w http.ResponseWriter, httpStatus int, errorCode models.E
 	}
 }
 
+// получаем рандомные n элементов списка
 func pickNRandomStrings(candidates []string, n int) []string {
 	if n <= 0 || len(candidates) == 0 {
 		return []string{}
@@ -74,6 +76,7 @@ func (h *Handler) TeamAddHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer tx.Rollback()
 
+	//проверяем существование команды с таким названием
 	var existingTeamName string
 	err = tx.QueryRowContext(ctx, "SELECT team_name FROM teams WHERE team_name = $1", req.TeamName).Scan(&existingTeamName)
 	if err == nil {
@@ -94,6 +97,7 @@ func (h *Handler) TeamAddHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	///
 	var addedMembers []models.TeamMember
 	for _, member := range req.Members {
 		upsertUserQuery := `
@@ -120,6 +124,8 @@ func (h *Handler) TeamAddHandler(w http.ResponseWriter, r *http.Request) {
 			IsActive: updatedIsActive,
 		})
 	}
+
+	///
 
 	if err := tx.Commit(); err != nil {
 		log.Printf("Failed to commit transaction: %v", err)
@@ -649,6 +655,96 @@ func (h *Handler) PRReassignHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(resp); err != nil {
+		log.Printf("Failed to encode response: %v", err)
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
+}
+
+func (h *Handler) GetOverallStatsHandler(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	var overallStats models.OverallStatsResponse
+
+	prStatsQuery := `
+		SELECT
+			COUNT(pull_request_id) AS total_prs,
+			COUNT(CASE WHEN status = 'OPEN' THEN 1 END) AS open_prs,
+			COUNT(CASE WHEN status = 'MERGED' THEN 1 END) AS merged_prs,
+			AVG(
+				CASE
+					WHEN reviewer1_id IS NOT NULL AND reviewer2_id IS NOT NULL THEN 2.0
+					WHEN reviewer1_id IS NOT NULL OR reviewer2_id IS NOT NULL THEN 1.0
+					ELSE 0.0
+				END
+			) AS avg_reviewers_per_pr
+		FROM pull_requests;
+	`
+	var totalPRs, openPRs, mergedPRs int
+	var avgReviewersPerPR sql.NullFloat64
+	err := h.DB.QueryRowContext(ctx, prStatsQuery).Scan(&totalPRs, &openPRs, &mergedPRs, &avgReviewersPerPR)
+	if err != nil {
+		log.Printf("Failed to get PR statistics: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	overallStats.PRStats.TotalPRs = totalPRs
+	overallStats.PRStats.OpenPRs = openPRs
+	overallStats.PRStats.MergedPRs = mergedPRs
+	if avgReviewersPerPR.Valid {
+		overallStats.PRStats.AvgReviewersPerPR = avgReviewersPerPR.Float64
+	} else {
+		overallStats.PRStats.AvgReviewersPerPR = 0.0
+	}
+
+	userStatsQuery := `
+		SELECT
+			u.user_id,
+			u.username,
+			COUNT(DISTINCT pr_assigned.pull_request_id) AS reviews_assigned,
+			COUNT(DISTINCT pr_completed.pull_request_id) AS reviews_completed
+		FROM
+			users u
+		LEFT JOIN
+			pull_requests pr_assigned ON u.user_id = pr_assigned.reviewer1_id OR u.user_id = pr_assigned.reviewer2_id
+		LEFT JOIN
+			pull_requests pr_completed ON (u.user_id = pr_completed.reviewer1_id OR u.user_id = pr_completed.reviewer2_id) AND pr_completed.status = 'MERGED'
+		GROUP BY
+			u.user_id, u.username
+		ORDER BY
+			reviews_assigned DESC, u.user_id;
+	`
+	rows, err := h.DB.QueryContext(ctx, userStatsQuery)
+	if err != nil {
+		log.Printf("Failed to get user review statistics: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	var userStatsList []models.UserReviewStats
+	for rows.Next() {
+		var stats models.UserReviewStats
+		err := rows.Scan(&stats.UserID, &stats.Username, &stats.ReviewsAssigned, &stats.ReviewsCompleted)
+		if err != nil {
+			log.Printf("Failed to scan user review stats: %v", err)
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
+			return
+		}
+		userStatsList = append(userStatsList, stats)
+	}
+
+	if err = rows.Err(); err != nil {
+		log.Printf("Error iterating rows for user stats: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+	overallStats.UserStats = userStatsList
+
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(overallStats); err != nil {
 		log.Printf("Failed to encode response: %v", err)
 		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
 		return

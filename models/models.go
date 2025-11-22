@@ -105,3 +105,22 @@ type UserGetReviewResponse struct {
 	UserID       string             `json:"user_id"`
 	PullRequests []PullRequestShort `json:"pull_requests"`
 }
+
+type UserReviewStats struct {
+	UserID           string `json:"user_id"`
+	Username         string `json:"username"`
+	ReviewsAssigned  int    `json:"reviews_assigned"`
+	ReviewsCompleted int    `json:"reviews_completed"`
+}
+
+type PRStats struct {
+	TotalPRs          int     `json:"total_prs"`
+	OpenPRs           int     `json:"open_prs"`
+	MergedPRs         int     `json:"merged_prs"`
+	AvgReviewersPerPR float64 `json:"avg_reviewers_per_pr"`
+}
+
+type OverallStatsResponse struct {
+	UserStats []UserReviewStats `json:"user_stats"`
+	PRStats   PRStats           `json:"pr_stats"`
+}
