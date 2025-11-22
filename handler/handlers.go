@@ -61,22 +61,21 @@ func (h *Handler) TeamAddHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) TeamGetHandler(w http.ResponseWriter, r *http.Request) {
-	// ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
-	// defer cancel()
-	// if teamName := r.URL.Query().Get("name"); teamName == "" {
-	// 	http.Error(w, "'name' parameter is required", http.StatusBadRequest)
-	// 	return
-	// }
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+	if teamName := r.URL.Query().Get("name"); teamName == "" {
+		http.Error(w, "'name' parameter is required", http.StatusBadRequest)
+		return
+	}
 
-	// query := "SELECT * FROM users WHERE team_name = $1"
-	// var
+	query := "SELECT * FROM users WHERE team_name = $1"
+	var 
 
-	// resp := models.Team{TeamName: teamName, Members: teamMembers}
-	// w.Header().Set("Content-Type", "application/json")
-	// if err := json.NewEncoder(w).Encode(resp); err != nil {
-	// 	http.Error(w, "Failed to encode response", http.StatusInternalServerError)
-	// 	return
-	// }
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(resp); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
 }
 
 func (h *Handler) UserSetIsActiveHandler(w http.ResponseWriter, r *http.Request) {
