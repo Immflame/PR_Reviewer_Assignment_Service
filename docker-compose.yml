@@ -15,12 +15,12 @@ services:
 
 
   pr-reviewer-assignment-service:
-    build: ./pr-reviewer-assignment-service
+    build: . 
     environment:
-      DATABASE_URL: postgres://postgres:aidar2006@localhost:5432/PRReviewerAssignment?sslmode=disable
-      PORT: 8081
+      DATABASE_URL: postgres://postgres:aidar2006@db:5432/PRReviewerAssignment?sslmode=disable 
+      PORT: 8080
     ports:
-      - "8081:8081"
+      - "8080:8080"
     depends_on:
       db:
         condition: service_healthy

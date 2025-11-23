@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"database/sql"
-	_ "embed"
 	"fmt"
 	"log"
 	"net/http"
@@ -11,6 +10,8 @@ import (
 
 	"pr_reviewer_assignment_service/config"
 	"pr_reviewer_assignment_service/handler"
+
+	_ "embed"
 
 	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"

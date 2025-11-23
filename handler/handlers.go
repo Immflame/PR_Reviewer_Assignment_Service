@@ -441,7 +441,7 @@ func (h *Handler) PRMergeHandler(w http.ResponseWriter, r *http.Request) {
 
 	query := `
 		UPDATE pull_requests
-		SET status = $1, merged_at = CURRENT_TIMESTAMP
+		SET status = $1, merged_at = COALESCE(merged_at, CURRENT_TIMESTAMP)
 		WHERE pull_request_id = $2
 		RETURNING pull_request_id, pull_request_name, author_id, status, reviewer1_id, reviewer2_id, created_at, merged_at;
 	`
