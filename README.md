@@ -29,7 +29,7 @@
 ### Инструкции по запуску
 
 1. `git clone https://github.com/Immflame/PR_Reviewer_Assignment_Service`
-2. `cd pr-reviewer-assignment-service`
+2. `cd PR_Reviewer_Assignment_Service`
 3. `docker compose up --build`
 
 Сервис по умолчанию будет доступен по адресу http://localhost:8080
