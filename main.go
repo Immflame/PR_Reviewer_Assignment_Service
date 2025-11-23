@@ -31,7 +31,7 @@ func main() {
 	}
 	defer db.Close()
 
-	initCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	initCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	// Проверка соединения с бд

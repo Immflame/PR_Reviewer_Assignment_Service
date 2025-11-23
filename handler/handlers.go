@@ -80,7 +80,7 @@ func (h *Handler) TeamAddHandler(w http.ResponseWriter, r *http.Request) {
 	var existingTeamName string
 	err = tx.QueryRowContext(ctx, "SELECT team_name FROM teams WHERE team_name = $1", req.TeamName).Scan(&existingTeamName)
 	if err == nil {
-		sendErrorResponse(w, http.StatusBadRequest, models.ErrorCodeTeamExists, "Team with this name already exists")
+		sendErrorResponse(w, http.StatusBadRequest, models.ErrorCodeTeamExists, existingTeamName+" team already exists")
 		return
 	}
 	if err != sql.ErrNoRows {
